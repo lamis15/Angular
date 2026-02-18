@@ -67,6 +67,12 @@
         >
           ⭐ Ajouter aux favoris
         </button>
+        <button 
+          class="btn btn-details" 
+          [routerLink]="['/suggestions', suggestion.id]"
+        >
+          📄 Détails
+        </button>
       </div>
 
       <!-- Message pour les suggestions refusées -->

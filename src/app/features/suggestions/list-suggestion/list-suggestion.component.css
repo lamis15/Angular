@@ -192,6 +192,16 @@ h1 {
   transform: scale(1.05);
 }
 
+.btn-details {
+  background-color: #9b59b6;
+  color: white;
+}
+
+.btn-details:hover {
+  background-color: #8e44ad;
+  transform: scale(1.05);
+}
+
 /* Message pour suggestions refusées */
 .refused-message {
   padding: 10px;

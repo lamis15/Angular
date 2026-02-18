@@ -1,15 +1,17 @@
-import { Component } from '@angular/core';
-import { Suggestion } from '../../models/suggestion';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Suggestion } from '../../../models/suggestion';
 
 @Component({
-  selector: 'app-list-suggestion',
-  templateUrl: './list-suggestion.component.html',
-  styleUrls: ['./list-suggestion.component.css']
+  selector: 'app-suggestion-details',
+  templateUrl: './suggestion-details.component.html',
+  styleUrls: ['./suggestion-details.component.css']
 })
-export class ListSuggestionComponent {
-  searchText: string = '';
-  favorites: Suggestion[] = [];
+export class SuggestionDetailsComponent implements OnInit {
+  suggestionId!: number;
+  suggestion!: Suggestion;
 
+  // Liste des suggestions (normalement viendrait d'un service)
   suggestions: Suggestion[] = [
     {
       id: 1,
@@ -49,40 +51,31 @@ export class ListSuggestionComponent {
     }
   ];
 
-  // Méthode pour incrémenter les likes
-  incrementLikes(suggestion: Suggestion): void {
-    suggestion.nbLikes++;
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    // Récupérer l'ID depuis les paramètres de route
+    this.route.params.subscribe(params => {
+      this.suggestionId = +params['id']; // Le + convertit la string en number
+      this.loadSuggestionDetails();
+    });
   }
 
-  // Méthode pour ajouter aux favoris
-  addToFavorites(suggestion: Suggestion): void {
-    if (!this.favorites.find(fav => fav.id === suggestion.id)) {
-      this.favorites.push(suggestion);
-      alert(`"${suggestion.title}" ajoutée aux favoris!`);
-    } else {
-      alert('Cette suggestion est déjà dans vos favoris!');
-    }
-  }
-
-  // Méthode pour filtrer les suggestions
-  get filteredSuggestions(): Suggestion[] {
-    if (!this.searchText.trim()) {
-      return this.suggestions;
-    }
+  loadSuggestionDetails(): void {
+    // Trouver la suggestion correspondante
+    const found = this.suggestions.find(s => s.id === this.suggestionId);
     
-    const searchLower = this.searchText.toLowerCase();
-    return this.suggestions.filter(suggestion =>
-      suggestion.title.toLowerCase().includes(searchLower) ||
-      suggestion.category.toLowerCase().includes(searchLower)
-    );
+    if (found) {
+      this.suggestion = found;
+    } else {
+      // Si la suggestion n'existe pas, rediriger vers 404
+      this.router.navigate(['/notfound']);
+    }
   }
 
-  // Méthode pour vérifier si une suggestion est refusée
-  isRefused(status: string): boolean {
-    return status === 'refusee';
-  }
-
-  // Méthode pour obtenir la classe CSS selon le statut
   getStatusClass(status: string): string {
     switch (status) {
       case 'acceptee':
@@ -96,7 +89,6 @@ export class ListSuggestionComponent {
     }
   }
 
-  // Méthode pour formater le statut
   getStatusLabel(status: string): string {
     switch (status) {
       case 'acceptee':
@@ -108,5 +100,9 @@ export class ListSuggestionComponent {
       default:
         return status;
     }
+  }
+
+  backToList(): void {
+    this.router.navigate(['/suggestions']);
   }
 }

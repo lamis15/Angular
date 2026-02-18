@@ -1,0 +1,130 @@
+<div class="details-container" *ngIf="suggestion">
+  <!-- Bouton de retour -->
+  <div class="back-button-container">
+    <button class="btn-back" (click)="backToList()">
+      ← Retour à la liste
+    </button>
+  </div>
+
+  <!-- En-tête de la suggestion -->
+  <div class="details-header">
+    <h1>{{ suggestion.title }}</h1>
+    <span [class]="getStatusClass(suggestion.status)" class="status-badge">
+      {{ getStatusLabel(suggestion.status) }}
+    </span>
+  </div>
+
+  <!-- Métadonnées -->
+  <div class="details-meta">
+    <div class="meta-item">
+      <span class="meta-label">📁 Catégorie :</span>
+      <span class="meta-value">{{ suggestion.category }}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">📅 Date :</span>
+      <span class="meta-value">{{ suggestion.date | date: 'dd/MM/yyyy' }}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">❤️ Likes :</span>
+      <span class="meta-value">{{ suggestion.nbLikes }}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">🆔 ID :</span>
+      <span class="meta-value">#{{ suggestion.id }}</span>
+    </div>
+  </div>
+
+  <!-- Description complète -->
+  <div class="details-description">
+    <h2>Description détaillée</h2>
+    <p>{{ suggestion.description }}</p>
+  </div>
+
+  <!-- Section informations supplémentaires -->
+  <div class="additional-info">
+    <h3>Informations complémentaires</h3>
+    
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-icon">👥</div>
+        <h4>Équipe concernée</h4>
+        <p>{{ suggestion.category }}</p>
+      </div>
+      
+      <div class="info-card">
+        <div class="info-icon">⏱️</div>
+        <h4>Temps de traitement</h4>
+        <p>En cours d'évaluation</p>
+      </div>
+      
+      <div class="info-card">
+        <div class="info-icon">📊</div>
+        <h4>Impact estimé</h4>
+        <p *ngIf="suggestion.status === 'acceptee'">Positif</p>
+        <p *ngIf="suggestion.status === 'refusee'">Non retenu</p>
+        <p *ngIf="suggestion.status === 'en_attente'">En évaluation</p>
+      </div>
+      
+      <div class="info-card">
+        <div class="info-icon">🎯</div>
+        <h4>Priorité</h4>
+        <p *ngIf="suggestion.nbLikes > 5">Haute</p>
+        <p *ngIf="suggestion.nbLikes <= 5 && suggestion.nbLikes > 0">Moyenne</p>
+        <p *ngIf="suggestion.nbLikes === 0">Basse</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section de commentaires (simulée) -->
+  <div class="comments-section">
+    <h3>Commentaires et retours</h3>
+    <div class="comment-box">
+      <div class="comment" *ngIf="suggestion.status === 'acceptee'">
+        <div class="comment-author">👤 Équipe de direction</div>
+        <p>Excellente suggestion ! Nous allons procéder à la mise en œuvre dans les prochaines semaines.</p>
+        <span class="comment-date">Il y a 2 jours</span>
+      </div>
+      
+      <div class="comment" *ngIf="suggestion.status === 'refusee'">
+        <div class="comment-author">👤 Équipe de direction</div>
+        <p>Merci pour cette suggestion. Après analyse, nous ne pouvons pas la retenir pour le moment en raison de contraintes budgétaires.</p>
+        <span class="comment-date">Il y a 5 jours</span>
+      </div>
+      
+      <div class="comment" *ngIf="suggestion.status === 'en_attente'">
+        <div class="comment-author">👤 Équipe de direction</div>
+        <p>Votre suggestion est en cours d'examen. Nous vous tiendrons informé sous peu.</p>
+        <span class="comment-date">Il y a 1 jour</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="details-actions">
+    <button class="btn-action btn-like">
+      👍 J'aime cette suggestion
+    </button>
+    <button class="btn-action btn-share">
+      🔗 Partager
+    </button>
+    <button class="btn-action btn-report">
+      ⚠️ Signaler
+    </button>
+  </div>
+
+  <!-- Bouton de retour en bas -->
+  <div class="back-button-container bottom">
+    <button class="btn-back" (click)="backToList()">
+      ← Retour à la liste
+    </button>
+  </div>
+</div>
+
+<!-- Message de chargement si la suggestion n'existe pas -->
+<div class="not-found-message" *ngIf="!suggestion">
+  <h2>⚠️ Suggestion non trouvée</h2>
+  <p>La suggestion demandée n'existe pas.</p>
+  <button class="btn-back" (click)="backToList()">
+    Retour à la liste
+  </button>
+</div>

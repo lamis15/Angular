@@ -6,9 +6,9 @@
     </div>
     <nav class="header-nav">
       <ul>
-        <li><a href="#" class="active">Accueil</a></li>
-        <li><a href="#">Suggestions</a></li>
-        <li><a href="#">À propos</a></li>
+        <li><a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Accueil</a></li>
+        <li><a routerLink="/suggestions" routerLinkActive="active">Suggestions</a></li>
+        <li><a routerLink="/users" routerLinkActive="active">Utilisateurs</a></li>
       </ul>
     </nav>
   </div>
