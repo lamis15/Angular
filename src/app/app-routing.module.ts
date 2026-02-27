@@ -4,25 +4,25 @@ import { HomeComponent } from './core/home/home.component';
 import { NotfoundComponent } from './core/notfound/notfound.component';
 
 const routes: Routes = [
-  // Route par défaut
+  // Route par défaut - redirige vers /home
   { path: '', redirectTo: '/home', pathMatch: 'full' },
   
-  // Route statique
+  // Route vers la page d'accueil
   { path: 'home', component: HomeComponent },
   
-  // Routes lazy loading
+  // Route lazy loading vers le module Suggestions
   { 
     path: 'suggestions', 
-    loadChildren: () => import('./features/suggestions/suggestions.module')
-      .then(m => m.SuggestionsModule) 
-  },
-  { 
-    path: 'users', 
-    loadChildren: () => import('./features/users/users.module')
-      .then(m => m.UsersModule) 
+    loadChildren: () => import('./features/suggestions/suggestions.module').then(m => m.SuggestionsModule) 
   },
   
-  // Route 404 (doit être la dernière)
+  // Route lazy loading vers le module Users
+  { 
+    path: 'users', 
+    loadChildren: () => import('./features/users/users.module').then(m => m.UsersModule) 
+  },
+  
+  // Route 404 - doit être la dernière
   { path: '**', component: NotfoundComponent }
 ];
 

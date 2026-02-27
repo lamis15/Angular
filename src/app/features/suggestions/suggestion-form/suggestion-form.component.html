@@ -1,0 +1,142 @@
+<div class="form-container">
+  <div class="form-header">
+    <h1>📝 Ajouter une Suggestion</h1>
+    <p class="subtitle">Partagez vos idées pour améliorer notre organisation</p>
+  </div>
+
+  <form [formGroup]="suggestionForm" (ngSubmit)="onSubmit()" class="suggestion-form">
+    
+    <!-- Champ Titre -->
+    <div class="form-group">
+      <label for="title">Titre <span class="required">*</span></label>
+      <input 
+        type="text" 
+        id="title" 
+        formControlName="title"
+        class="form-control"
+        [class.invalid]="title?.invalid && title?.touched"
+        placeholder="Entrez le titre de votre suggestion"
+      />
+      
+      <!-- Messages d'erreur pour le titre -->
+      <div class="error-messages" *ngIf="title?.invalid && title?.touched">
+        <small class="error" *ngIf="title?.errors?.['required']">
+          ⚠️ Le titre est obligatoire.
+        </small>
+        <small class="error" *ngIf="title?.errors?.['minlength']">
+          ⚠️ Le titre doit contenir au minimum 5 caractères.
+        </small>
+        <small class="error" *ngIf="title?.errors?.['pattern']">
+          ⚠️ Le titre doit commencer par une majuscule et ne contenir que des lettres.
+        </small>
+      </div>
+    </div>
+
+    <!-- Champ Description -->
+    <div class="form-group">
+      <label for="description">Description <span class="required">*</span></label>
+      <textarea 
+        id="description" 
+        formControlName="description"
+        class="form-control"
+        [class.invalid]="description?.invalid && description?.touched"
+        rows="5"
+        placeholder="Décrivez votre suggestion en détail (minimum 30 caractères)"
+      ></textarea>
+      
+      <!-- Compteur de caractères -->
+      <div class="character-count">
+        {{ description?.value?.length || 0 }} / 30 caractères minimum
+      </div>
+      
+      <!-- Messages d'erreur pour la description -->
+      <div class="error-messages" *ngIf="description?.invalid && description?.touched">
+        <small class="error" *ngIf="description?.errors?.['required']">
+          ⚠️ La description est obligatoire.
+        </small>
+        <small class="error" *ngIf="description?.errors?.['minlength']">
+          ⚠️ La description doit contenir au minimum 30 caractères.
+        </small>
+      </div>
+    </div>
+
+    <!-- Champ Catégorie -->
+    <div class="form-group">
+      <label for="category">Catégorie <span class="required">*</span></label>
+      <select 
+        id="category" 
+        formControlName="category"
+        class="form-control"
+        [class.invalid]="category?.invalid && category?.touched"
+      >
+        <option value="" disabled selected>-- Sélectionnez une catégorie --</option>
+        <option *ngFor="let cat of categories" [value]="cat">
+          {{ cat }}
+        </option>
+      </select>
+      
+      <!-- Messages d'erreur pour la catégorie -->
+      <div class="error-messages" *ngIf="category?.invalid && category?.touched">
+        <small class="error" *ngIf="category?.errors?.['required']">
+          ⚠️ La catégorie est obligatoire.
+        </small>
+      </div>
+    </div>
+
+    <!-- Champ Date (readonly) -->
+    <div class="form-group">
+      <label for="date">Date</label>
+      <input 
+        type="date" 
+        id="date" 
+        formControlName="date"
+        class="form-control readonly"
+        readonly
+      />
+    </div>
+
+    <!-- Champ Status (readonly) -->
+    <div class="form-group">
+      <label for="status">Status</label>
+      <input 
+        type="text" 
+        id="status" 
+        formControlName="status"
+        class="form-control readonly"
+        readonly
+      />
+    </div>
+
+    <!-- Info sur la validation -->
+    <div class="form-info" *ngIf="suggestionForm.invalid">
+      <p>
+        ℹ️ Veuillez remplir tous les champs obligatoires correctement pour soumettre votre suggestion.
+      </p>
+    </div>
+
+    <!-- Boutons d'action -->
+    <div class="form-actions">
+      <button 
+        type="submit" 
+        class="btn btn-submit"
+        [disabled]="suggestionForm.invalid"
+      >
+        ✓ Soumettre
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-cancel"
+        (click)="onCancel()"
+      >
+        ✗ Annuler
+      </button>
+    </div>
+
+    <!-- État du formulaire (pour debug - à retirer en production) -->
+    <div class="debug-info" *ngIf="false">
+      <p><strong>État du formulaire :</strong> {{ suggestionForm.valid ? 'VALIDE ✓' : 'INVALIDE ✗' }}</p>
+      <p><strong>Valeurs :</strong></p>
+      <pre>{{ suggestionForm.value | json }}</pre>
+    </div>
+  </form>
+</div>
