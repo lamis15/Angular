@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Suggestion } from '../../../models/suggestion';
+import { SuggestionService } from '../../../core/services/suggestion.service';
 
 @Component({
   selector: 'app-suggestion-details',
@@ -11,71 +12,59 @@ export class SuggestionDetailsComponent implements OnInit {
   suggestionId!: number;
   suggestion!: Suggestion;
 
-  // Liste des suggestions (normalement viendrait d'un service)
-  suggestions: Suggestion[] = [
-    {
-      id: 1,
-      title: 'Organiser une journée team building',
-      description: 'Suggestion pour organiser une journée de team building pour renforcer les liens entre les membres de l\'équipe.',
-      category: 'Événements',
-      date: new Date('2025-01-20'),
-      status: 'acceptee',
-      nbLikes: 10
-    },
-    {
-      id: 2,
-      title: 'Améliorer le système de réservation',
-      description: 'Proposition pour améliorer la gestion des réservations en ligne avec un système de confirmation automatique.',
-      category: 'Technologie',
-      date: new Date('2025-01-15'),
-      status: 'refusee',
-      nbLikes: 0
-    },
-    {
-      id: 3,
-      title: 'Créer un système de récompenses',
-      description: 'Mise en place d\'un programme de récompenses pour motiver les employés et reconnaître leurs efforts.',
-      category: 'Ressources Humaines',
-      date: new Date('2025-01-25'),
-      status: 'refusee',
-      nbLikes: 0
-    },
-    {
-      id: 4,
-      title: 'Moderniser l\'interface utilisateur',
-      description: 'Refonte complète de l\'interface utilisateur pour une meilleure expérience utilisateur.',
-      category: 'Technologie',
-      date: new Date('2025-01-30'),
-      status: 'en_attente',
-      nbLikes: 0
-    }
-  ];
-
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private suggestionService: SuggestionService
   ) {}
 
   ngOnInit(): void {
     // Récupérer l'ID depuis les paramètres de route
     this.route.params.subscribe(params => {
-      this.suggestionId = +params['id']; // Le + convertit la string en number
+      this.suggestionId = +params['id'];
       this.loadSuggestionDetails();
     });
   }
 
+  /**
+   * Charge les détails d'une suggestion depuis le service
+   */
   loadSuggestionDetails(): void {
-    // Trouver la suggestion correspondante
-    const found = this.suggestions.find(s => s.id === this.suggestionId);
+    // VERSION AVEC HttpClient (Partie 2)
+    this.suggestionService.getSuggestionById(this.suggestionId).subscribe({
+      next: (data) => {
+        this.suggestion = data;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement de la suggestion:', error);
+        // Si le backend n'est pas disponible, utiliser les données locales
+        const suggestions = this.suggestionService.getSuggestionsListLocal();
+        const found = suggestions.find(s => s.id === this.suggestionId);
+        
+        if (found) {
+          this.suggestion = found;
+        } else {
+          this.router.navigate(['/notfound']);
+        }
+      }
+    });
+
+    // VERSION LOCALE (Partie 1)
+    /*
+    const suggestions = this.suggestionService.getSuggestionsListLocal();
+    const found = suggestions.find(s => s.id === this.suggestionId);
     
     if (found) {
       this.suggestion = found;
     } else {
-      // Si la suggestion n'existe pas, rediriger vers 404
       this.router.navigate(['/notfound']);
     }
+    */
   }
 
+  /**
+   * Retourne la classe CSS selon le statut
+   */
   getStatusClass(status: string): string {
     switch (status) {
       case 'acceptee':
@@ -89,6 +78,9 @@ export class SuggestionDetailsComponent implements OnInit {
     }
   }
 
+  /**
+   * Formate le statut pour l'affichage
+   */
   getStatusLabel(status: string): string {
     switch (status) {
       case 'acceptee':
@@ -102,7 +94,17 @@ export class SuggestionDetailsComponent implements OnInit {
     }
   }
 
+  /**
+   * Retour à la liste des suggestions
+   */
   backToList(): void {
     this.router.navigate(['/suggestions']);
+  }
+
+  /**
+   * Navigation vers le formulaire de modification
+   */
+  editSuggestion(): void {
+    this.router.navigate(['/suggestions/edit', this.suggestionId]);
   }
 }

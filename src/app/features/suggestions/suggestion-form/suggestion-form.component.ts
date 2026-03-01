@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Suggestion } from '../../../models/suggestion';
+import { SuggestionService } from '../../../core/services/suggestion.service';
 
 @Component({
   selector: 'app-suggestion-form',
@@ -10,6 +11,8 @@ import { Suggestion } from '../../../models/suggestion';
 })
 export class SuggestionFormComponent implements OnInit {
   suggestionForm!: FormGroup;
+  isEditMode: boolean = false;
+  suggestionId!: number;
   
   categories: string[] = [
     'Infrastructure et bâtiments',
@@ -24,57 +27,28 @@ export class SuggestionFormComponent implements OnInit {
     'Autre'
   ];
 
-  // Liste des suggestions (normalement viendrait d'un service)
-  suggestions: Suggestion[] = [
-    {
-      id: 1,
-      title: 'Organiser une journée team building',
-      description: 'Suggestion pour organiser une journée de team building pour renforcer les liens entre les membres de l\'équipe.',
-      category: 'Événements',
-      date: new Date('2025-01-20'),
-      status: 'acceptee',
-      nbLikes: 10
-    },
-    {
-      id: 2,
-      title: 'Améliorer le système de réservation',
-      description: 'Proposition pour améliorer la gestion des réservations en ligne avec un système de confirmation automatique.',
-      category: 'Technologie',
-      date: new Date('2025-01-15'),
-      status: 'refusee',
-      nbLikes: 0
-    },
-    {
-      id: 3,
-      title: 'Créer un système de récompenses',
-      description: 'Mise en place d\'un programme de récompenses pour motiver les employés et reconnaître leurs efforts.',
-      category: 'Ressources Humaines',
-      date: new Date('2025-01-25'),
-      status: 'refusee',
-      nbLikes: 0
-    },
-    {
-      id: 4,
-      title: 'Moderniser l\'interface utilisateur',
-      description: 'Refonte complète de l\'interface utilisateur pour une meilleure expérience utilisateur.',
-      category: 'Technologie',
-      date: new Date('2025-01-30'),
-      status: 'en_attente',
-      nbLikes: 0
-    }
-  ];
-
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute,
+    private suggestionService: SuggestionService
   ) {}
 
   ngOnInit(): void {
     this.initForm();
+    
+    // Vérifier si on est en mode édition
+    this.route.params.subscribe(params => {
+      if (params['id']) {
+        this.isEditMode = true;
+        this.suggestionId = +params['id'];
+        this.loadSuggestionForEdit();
+      }
+    });
   }
 
   initForm(): void {
-    const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
 
     this.suggestionForm = this.fb.group({
       title: [
@@ -82,7 +56,7 @@ export class SuggestionFormComponent implements OnInit {
         [
           Validators.required, 
           Validators.minLength(5),
-          Validators.pattern('^[A-Z][a-zA-Z]*$')
+          Validators.pattern('^[A-Z].*')
         ]
       ],
       description: [
@@ -94,11 +68,51 @@ export class SuggestionFormComponent implements OnInit {
       ],
       category: ['', Validators.required],
       date: [{ value: today, disabled: true }],
-      status: [{ value: 'en attente', disabled: true }]
+      status: [{ value: 'en_attente', disabled: true }]
     });
   }
 
-  // Getters pour faciliter l'accès aux contrôles dans le template
+  /**
+   * Safely formats a date for input[type="date"]
+   */
+  private formatDateForInput(date: any): string {
+    if (!date) {
+      return new Date().toISOString().split('T')[0];
+    }
+    
+    const dateObj = new Date(date);
+    
+    if (isNaN(dateObj.getTime())) {
+      console.warn('Invalid date received:', date);
+      return new Date().toISOString().split('T')[0];
+    }
+    
+    return dateObj.toISOString().split('T')[0];
+  }
+
+  /**
+   * Charge les données de la suggestion à modifier
+   */
+  loadSuggestionForEdit(): void {
+    this.suggestionService.getSuggestionById(this.suggestionId).subscribe({
+      next: (data) => {
+        this.suggestionForm.patchValue({
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          date: this.formatDateForInput(data.date),
+          status: data.status
+        });
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement de la suggestion:', error);
+        alert('Erreur lors du chargement de la suggestion.');
+        this.router.navigate(['/suggestions']);
+      }
+    });
+  }
+
+  // Getters pour faciliter l'accès aux contrôles
   get title() {
     return this.suggestionForm.get('title');
   }
@@ -113,34 +127,48 @@ export class SuggestionFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.suggestionForm.valid) {
-      // Générer un nouvel ID (auto-incrément)
-      const newId = this.suggestions.length > 0 
-        ? Math.max(...this.suggestions.map(s => s.id)) + 1 
-        : 1;
-
-      // Créer la nouvelle suggestion
-      const newSuggestion: Suggestion = {
-        id: newId,
+      const suggestionData: Partial<Suggestion> = {
         title: this.suggestionForm.get('title')?.value,
         description: this.suggestionForm.get('description')?.value,
         category: this.suggestionForm.get('category')?.value,
         date: new Date(),
-        status: 'en_attente',
-        nbLikes: 0
+        status: 'en_attente'
       };
 
-      // Ajouter la suggestion à la liste
-      this.suggestions.push(newSuggestion);
-      
-      // Afficher un message de confirmation
-      alert(`Suggestion "${newSuggestion.title}" ajoutée avec succès !`);
+      if (this.isEditMode) {
+        // MODE MODIFICATION
+        this.suggestionService.updateSuggestion(this.suggestionId, suggestionData as Suggestion).subscribe({
+          next: () => {
+            alert('Suggestion modifiée avec succès !');
+            this.router.navigate(['/suggestions']);
+          },
+          error: (error) => {
+            console.error('Erreur lors de la modification:', error);
+            alert('Erreur lors de la modification de la suggestion.');
+          }
+        });
+      } else {
+        // MODE AJOUT
+        const newSuggestion: Suggestion = {
+          ...suggestionData,
+          id: 0,
+          nbLikes: 0
+        } as Suggestion;
 
-      // Rediriger vers la liste des suggestions
-      this.router.navigate(['/suggestions']);
+        this.suggestionService.addSuggestion(newSuggestion).subscribe({
+          next: () => {
+            alert('Suggestion ajoutée avec succès !');
+            this.router.navigate(['/suggestions']);
+          },
+          error: (error) => {
+            console.error('Erreur lors de l\'ajout:', error);
+            alert('Erreur lors de l\'ajout de la suggestion.');
+          }
+        });
+      }
     }
   }
 
-  // Méthode pour annuler et retourner à la liste
   onCancel(): void {
     this.router.navigate(['/suggestions']);
   }

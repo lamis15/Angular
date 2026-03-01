@@ -1,60 +1,72 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { Suggestion } from '../../../models/suggestion';
+import { SuggestionService } from '../../../core/services/suggestion.service';
 
 @Component({
   selector: 'app-list-suggestion',
   templateUrl: './list-suggestion.component.html',
   styleUrls: ['./list-suggestion.component.css']
 })
-export class ListSuggestionComponent {
+export class ListSuggestionComponent implements OnInit {
   searchText: string = '';
   favorites: Suggestion[] = [];
+  suggestions: Suggestion[] = [];
 
-  suggestions: Suggestion[] = [
-    {
-      id: 1,
-      title: 'Organiser une journée team building',
-      description: 'Suggestion pour organiser une journée de team building pour renforcer les liens entre les membres de l\'équipe.',
-      category: 'Événements',
-      date: new Date('2025-01-20'),
-      status: 'acceptee',
-      nbLikes: 10
-    },
-    {
-      id: 2,
-      title: 'Améliorer le système de réservation',
-      description: 'Proposition pour améliorer la gestion des réservations en ligne avec un système de confirmation automatique.',
-      category: 'Technologie',
-      date: new Date('2025-01-15'),
-      status: 'refusee',
-      nbLikes: 0
-    },
-    {
-      id: 3,
-      title: 'Créer un système de récompenses',
-      description: 'Mise en place d\'un programme de récompenses pour motiver les employés et reconnaître leurs efforts.',
-      category: 'Ressources Humaines',
-      date: new Date('2025-01-25'),
-      status: 'refusee',
-      nbLikes: 0
-    },
-    {
-      id: 4,
-      title: 'Moderniser l\'interface utilisateur',
-      description: 'Refonte complète de l\'interface utilisateur pour une meilleure expérience utilisateur.',
-      category: 'Technologie',
-      date: new Date('2025-01-30'),
-      status: 'en_attente',
-      nbLikes: 0
-    }
-  ];
+  constructor(
+    private suggestionService: SuggestionService,
+    private router: Router
+  ) {}
 
-  // Méthode pour incrémenter les likes
-  incrementLikes(suggestion: Suggestion): void {
-    suggestion.nbLikes++;
+  ngOnInit(): void {
+    this.loadSuggestions();
   }
 
-  // Méthode pour ajouter aux favoris
+  /**
+   * Charge la liste des suggestions depuis le service
+   */
+  loadSuggestions(): void {
+    // VERSION AVEC HttpClient (Partie 2)
+    this.suggestionService.getSuggestionsList().subscribe({
+      next: (data) => {
+        this.suggestions = data;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des suggestions:', error);
+        // Si le backend n'est pas disponible, utiliser les données locales
+        this.suggestions = this.suggestionService.getSuggestionsListLocal();
+      }
+    });
+
+    // VERSION LOCALE (Partie 1) - Décommenter si pas de backend
+    // this.suggestions = this.suggestionService.getSuggestionsListLocal();
+  }
+
+  /**
+   * Incrémente les likes d'une suggestion
+   */
+  incrementLikes(suggestion: Suggestion): void {
+    const newLikes = suggestion.nbLikes + 1;
+    
+    // VERSION AVEC HttpClient
+    this.suggestionService.updateLikes(suggestion.id, newLikes).subscribe({
+      next: (updatedSuggestion) => {
+        suggestion.nbLikes = updatedSuggestion.nbLikes;
+      },
+      error: (error) => {
+        console.error('Erreur lors de la mise à jour des likes:', error);
+        // Fallback local
+        suggestion.nbLikes++;
+      }
+    });
+
+    // VERSION LOCALE (Partie 1)
+    // suggestion.nbLikes++;
+  }
+
+  /**
+   * Ajoute une suggestion aux favoris
+   */
   addToFavorites(suggestion: Suggestion): void {
     if (!this.favorites.find(fav => fav.id === suggestion.id)) {
       this.favorites.push(suggestion);
@@ -64,7 +76,32 @@ export class ListSuggestionComponent {
     }
   }
 
-  // Méthode pour filtrer les suggestions
+  /**
+   * Supprime une suggestion
+   */
+  deleteSuggestion(id: number): void {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette suggestion ?')) {
+      // VERSION AVEC HttpClient
+      this.suggestionService.deleteSuggestion(id).subscribe({
+        next: () => {
+          // Recharger la liste après suppression
+          this.loadSuggestions();
+          alert('Suggestion supprimée avec succès !');
+        },
+        error: (error) => {
+          console.error('Erreur lors de la suppression:', error);
+          alert('Erreur lors de la suppression de la suggestion.');
+        }
+      });
+
+      // VERSION LOCALE (Partie 1)
+      // this.suggestions = this.suggestions.filter(s => s.id !== id);
+    }
+  }
+
+  /**
+   * Filtre les suggestions
+   */
   get filteredSuggestions(): Suggestion[] {
     if (!this.searchText.trim()) {
       return this.suggestions;
@@ -77,12 +114,16 @@ export class ListSuggestionComponent {
     );
   }
 
-  // Méthode pour vérifier si une suggestion est refusée
+  /**
+   * Vérifie si une suggestion est refusée
+   */
   isRefused(status: string): boolean {
     return status === 'refusee';
   }
 
-  // Méthode pour obtenir la classe CSS selon le statut
+  /**
+   * Retourne la classe CSS selon le statut
+   */
   getStatusClass(status: string): string {
     switch (status) {
       case 'acceptee':
@@ -96,7 +137,9 @@ export class ListSuggestionComponent {
     }
   }
 
-  // Méthode pour formater le statut
+  /**
+   * Formate le statut pour l'affichage
+   */
   getStatusLabel(status: string): string {
     switch (status) {
       case 'acceptee':

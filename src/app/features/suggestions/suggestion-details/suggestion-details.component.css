@@ -328,4 +328,14 @@
   .btn-action {
     width: 100%;
   }
+  .btn-update {
+  background: #f39c12;
+  color: white;
+}
+
+.btn-update:hover {
+  background: #e67e22;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+}
 }

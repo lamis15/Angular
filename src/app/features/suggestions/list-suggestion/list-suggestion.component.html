@@ -9,9 +9,6 @@
     </button>
   </div>
 
-<div class="suggestions-container">
-  <h1>Liste des Suggestions</h1>
-
   <!-- Barre de recherche -->
   <div class="search-bar">
     <input 
@@ -83,6 +80,12 @@
           [routerLink]="['/suggestions', suggestion.id]"
         >
           📄 Détails
+        </button>
+        <button 
+          class="btn btn-delete" 
+          (click)="deleteSuggestion(suggestion.id)"
+        >
+          🗑️ Supprimer
         </button>
       </div>
 
